@@ -6,7 +6,30 @@ var Enemy = function() {
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
+
+    // Set the Enemies possible location values
+    this.xRange = [-150, 600];
+    this.yValues = [60, 140, 220];
+
+    // Set the enemy possible range of speed values
+    this.speedRange = [180, 900];
+    this.start();
 };
+
+Enemy.prototype.start = function() {
+    var startPosition = this.xRange[0];
+    this.x = startPosition;
+    this.y = this.randomYValue();
+    this.speed = this.randomSpeed();
+}
+
+Enemy.prototype.randomYValue = function() {
+    return this.yValues[Math.floor(this.yValues.length * Math.random())];
+}
+
+Enemy.prototype.randomSpeed = function(){
+    return Math.floor((this.speedRange[1] - this.speedRange[0]) * Math.random()) + this.speedRange[0];
+}
 
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
@@ -14,23 +37,97 @@ Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
-};
+    this.x += this.speed * dt;
+
+    if (this.x > this.xRange[1]) {
+        this.start();
+    }
+}
 
 // Draw the enemy on the screen, required method for game
 Enemy.prototype.render = function() {
     ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
+}
 
 // Now write your own player class
 // This class requires an update(), render() and
 // a handleInput() method.
+var Player = function() {
+    // Set the player sprite
+    this.sprite = 'images/char-boy.png';
 
+    // Set the possible player location values
+    this.xRange = [-2, 402];
+    this.yRange = [-20, 380];
+
+    // Start the game
+    this.startGame();
+};
+
+Player.prototype.update = function() {
+    this.checkCollisions();
+}
+
+Player.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+}
+
+Player.prototype.startGame = function() {
+    // Set the player location on the start row
+    this.x = 200;
+    this.y = 380;
+}
+
+Player.prototype.handleInput = function(direction) {
+    switch (direction) {
+      case 'left':
+            this.x -= (this.x - 101 < this.xRange[0]) ? 0 : 101;
+            break;
+        case 'right':
+            this.x += (this.x + 101 > this.xRange[1]) ? 0 : 101;
+            break;
+        case 'up':
+            this.y -= (this.y - 80 < this.yRange[0]) ? 0 : 80;
+            break;
+        case 'down':
+            this.y += (this.y + 80 > this.yRange[1]) ? 0 : 80;
+            break;
+    }
+}
+
+Player.prototype.checkCollisions = function() {
+    if (this.y == -20) {
+        // start the game again - player succeeded
+        this.startGame();
+    } else if (this.y >= 60 && this.y <= 220) {
+        var self = this;
+        allEnemies.forEach(function(enemy) {
+            // Check if bug is on the same row as player
+            if (enemy.y == self.y) {
+                // check if bug collided with player
+                if (enemy.x >= player.x - 30 && enemy.x <= player.x + 30) {
+                    self.startGame();
+                }
+            }
+        });
+    }
+}
 
 // Now instantiate your objects.
+// Initiate the enemies
+var sarah = new Enemy();
+var george = new Enemy();
+var bob = new Enemy();
+var alice = new Enemy();
+
+// Initiate the player
+var nicola = new Player();
+
 // Place all enemy objects in an array called allEnemies
+allEnemies = [sarah, george, bob, alice];
+
 // Place the player object in a variable called player
-
-
+player = nicola;
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
